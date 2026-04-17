@@ -3,128 +3,163 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Soldier Telemetry Dashboard</title>
+  <title>Soldier Health Monitoring System</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  
   <link rel="stylesheet" href="css/style.css">
-  <!-- Include Phosphor Icons for tactical UI icons -->
-  <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 <body>
-  
-  <div class="error-banner" id="errorBanner">
-    ⚠ CONNECTION LOST — UNABLE TO REACH SERVER
-  </div>
 
-  <div class="container">
+  <!-- Top Navigation -->
+  <header class="top-nav">
+    <div class="nav-left">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+      </div>
+      <div class="branding">
+        <h1>SOLDIER HEALTH MONITORING SYSTEM</h1>
+        <div class="subtitle">TACTICAL BIOMETRIC OPERATIONS - CLASSIFIED</div>
+      </div>
+    </div>
     
-    <!-- HEADER -->
-    <header class="header-panel">
-      <div class="header-left">
-        <div class="bio-insignia">
-          <i class="ph-fill ph-dna"></i>
-        </div>
-        <div class="title-box">
-          <h1>SOLDIER TELEMETRY DASHBOARD</h1>
-          <div class="subtitle">SECURE UPLINK ESTABLISHED // ENCRYPTION LEVEL: TS-SCI</div>
-        </div>
+    <div class="nav-right">
+      <div class="clock" id="navTime">18:49:50</div>
+      <div class="date-status">
+        <span id="navDate">09 Apr 2026</span>
+        <span class="status-dot"></span>
       </div>
-      <div class="header-right">
-        <div class="time-display">
-          <span id="clockTime">--:--:--</span>
-          <div class="status-dot"></div>
-        </div>
-        <div class="date-display" id="clockDate">-- --- ----</div>
-      </div>
-    </header>
+    </div>
+  </header>
 
-    <!-- VITALS GRID -->
-    <div class="vitals-grid">
-      
-      <!-- PROFILE -->
-      <div class="card">
-        <div class="card-title">OPERATIVE PROFILE</div>
-        <div class="profile-content">
-          <div class="profile-avatar">
-            <i class="ph ph-user"></i>
+  <main class="dashboard">
+
+    <!-- TOP ROW -->
+    <div class="grid-row top-row">
+      <!-- FIELD OPERATIVE -->
+      <div class="card panel-operative">
+        <div class="card-header">
+          <span class="header-title">FIELD OPERATIVE</span>
+          <span class="header-badge">ALPHA-01</span>
+        </div>
+        
+        <div class="avatar-section">
+          <div class="avatar-circle">PA</div>
+        </div>
+        
+        <div class="details-list">
+          <div class="detail-row">
+            <span class="detail-label">SOLDIER ID</span>
+            <span class="detail-value text-white">ALPHA-01</span>
           </div>
-          <div class="profile-details">
-            <div><span class="label">ID:</span><span class="value">G-1138</span></div>
-            <div><span class="label">NAME:</span><span class="value">HAYES, V.</span></div>
-            <div><span class="label">RANK:</span><span class="value">CPT</span></div>
-            <div><span class="label">TYPE:</span><span class="value">O-POS</span></div>
-            <div><span class="label">UNIT:</span><span class="value">STRIKE-7</span></div>
+          <div class="detail-row">
+            <span class="detail-label">NAME</span>
+            <span class="detail-value text-white">Pvt. Arjun Mehta</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">UNIT</span>
+            <span class="detail-value text-white">5th Infantry Division</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">STATUS</span>
+            <span class="detail-value text-white">Active Duty</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">LOCATION</span>
+            <span class="detail-value text-white">Sector 7-G</span>
+          </div>
+          <div class="detail-row connection-row">
+            <span class="connected-dot"></span> CONNECTED
           </div>
         </div>
       </div>
 
-      <!-- BPM -->
-      <div class="card">
-        <div class="card-title">HEART RATE MONITOR</div>
-        <div class="metric-content status-waiting" id="bpmContainer">
-          <div class="metric-value" id="bpmValue">--</div>
-          <div class="metric-unit">BPM</div>
-          <div class="metric-icon"><i class="ph-fill ph-heartbeat"></i></div>
+      <!-- HEART RATE -->
+      <div class="card panel-bpm">
+        <div class="card-header">
+          <span class="header-title">HEART RATE</span>
+          <div class="status-indicator">
+            <span class="connected-dot"></span> NORMAL
+          </div>
+        </div>
+        
+        <div class="biometrics-grid">
+          <div class="bio-metric">
+            <div class="bio-value green" id="bpmValue">--</div>
+            <div class="bio-unit">BPM</div>
+            
+            <div class="bpm-legend">
+              <span class="leg-item"><span class="leg-dot blue"></span> LOW &lt;50</span>
+              <span class="leg-item"><span class="leg-dot green"></span> NORM 50-100</span>
+              <span class="leg-item"><span class="leg-dot red"></span> HIGH &gt;100</span>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- TEMPERATURE -->
-      <div class="card">
-        <div class="card-title">CORE TEMPERATURE</div>
-        <div class="metric-content status-waiting" id="tempContainer">
-          <div class="metric-value" id="tempValue">--</div>
-          <div class="metric-unit">°C</div>
-          <div class="metric-icon"><i class="ph-fill ph-thermometer"></i></div>
+      <div class="card panel-temp">
+        <div class="card-header">
+          <span class="header-title">CORE TEMP</span>
+          <span class="header-badge">LIVE SENSOR</span>
         </div>
-      </div>
-
-    </div>
-
-    <!-- ANALYTICS & MAP GRID -->
-    <div class="middle-grid">
-      <!-- GRAPH MOCK -->
-      <div class="card">
-        <div class="card-title">TELEMETRY HISTORY / BPM</div>
-        <div class="graph-area">
-          <div class="mock-line">
-            <svg preserveAspectRatio="none" viewBox="0 0 100 50">
-              <path d="M0,25 Q5,15 10,25 T20,25 T30,10 T40,25 T50,40 T60,25 T70,15 T80,25 T90,20 T100,25"></path>
-            </svg>
+        
+        <div class="biometrics-grid">
+          <div class="bio-metric">
+            <div class="bio-value orange" id="tempValue">--</div>
+            <div class="bio-unit">°C</div>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- MAP MOCK -->
-      <div class="card" title="Click to unfold tactical map">
-        <div class="card-title">TACTICAL POSITION</div>
-        <div class="map-area">
-          <!-- Mocking a top-down view grid/contour -->
-          <svg style="width:100%; height:100%; opacity:0.1; stroke:var(--neon-blue); fill:none; stroke-width:0.5;" viewBox="0 0 100 100">
-            <path d="M 10 0 C 20 20 50 40 100 50" />
-            <path d="M 0 30 C 40 40 60 70 80 100" />
-            <circle cx="50" cy="50" r="30" />
-            <circle cx="50" cy="50" r="60" />
-            <line x1="0" y1="50" x2="100" y2="50" />
-            <line x1="50" y1="0" x2="50" y2="100" />
-          </svg>
-          <div class="map-marker" style="top:45%; left:55%;"></div>
-          <div class="map-coords">LAT: 34.0522<br>LNG: -118.2437</div>
+    <!-- BOTTOM ROW -->
+    <div class="grid-row bottom-row">
+      <!-- BPM HISTORY -->
+      <div class="card panel-chart">
+        <div class="card-header">
+          <span class="header-title">BPM HISTORY</span>
+          <span class="header-badge">30 readings</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="bpmChart"></canvas>
+        </div>
+      </div>
+
+      <!-- LIVE LOCATION -->
+      <div class="card panel-map">
+        <div class="card-header">
+          <span class="header-title">LIVE LOCATION</span>
+          <span class="header-coord">17.3850, 78.4867</span>
+        </div>
+        <div id="leafletMap" class="map-container"></div>
+      </div>
+    </div>
+
+    <!-- LOG ROW -->
+    <div class="grid-row log-row">
+      <div class="card panel-log">
+        <div class="card-header" style="margin-bottom: 10px;">
+          <span class="header-title">SYSTEM EVENT LOG</span>
+        </div>
+        <div class="event-log" id="eventLog">
+           <!-- Logs will be dynamically inserted here -->
         </div>
       </div>
     </div>
 
-    <!-- ERROR LOGS -->
-    <div class="card">
-      <div class="card-title">SYSTEM EVENT LOG</div>
-      <div class="event-log" id="eventLog">
-        <!-- Pre-filled realistic data -->
-        <div class="log-entry log-info" id="initLog">
-          <div class="log-time">[HH:MM:SS:MS]</div>
-          <div class="log-msg">SYSTEM INITIALIZATION COMPLETE. ESTABLISHING DATALINK...</div>
-        </div>
-      </div>
-    </div>
+  </main>
 
-  </div>
-
+  <!-- JS Libraries -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
   <script src="js/app.js"></script>
 </body>
 </html>

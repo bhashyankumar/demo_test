@@ -1,139 +1,213 @@
-// c:\Users\vinay\demo_test\public\js\app.js
-
 const API_URL = 'http://127.0.0.1:5000/latest';
 
+// UI Elements
 const bpmValue = document.getElementById('bpmValue');
 const tempValue = document.getElementById('tempValue');
-const bpmContainer = document.getElementById('bpmContainer');
-const tempContainer = document.getElementById('tempContainer');
-const errorBanner = document.getElementById('errorBanner');
+const navTime = document.getElementById('navTime');
+const navDate = document.getElementById('navDate');
+const statusIndicator = document.querySelector('.status-indicator');
 const eventLog = document.getElementById('eventLog');
 
-// Status threshold logic preserved from original code
-function getStatusClass(bpm, temp) {
-    if (bpm > 120 || bpm < 40 || temp > 38.5 || temp < 35) {
-        return 'status-critical';
-    } else if (bpm > 100 || bpm < 50 || temp > 37.5 || temp < 36) {
-        return 'status-warning';
-    }
-    return 'status-normal';
+function logEvent(msg, typeClass = '') {
+    if (!eventLog) return;
+    const div = document.createElement('div');
+    div.className = `log-entry ${typeClass}`;
+    div.innerHTML = `<span style="color:#64748b;">[${getTimeStr()}]</span> <span>${msg}</span>`;
+    eventLog.prepend(div);
+    if (eventLog.children.length > 50) eventLog.lastChild.remove();
 }
 
-function getStatusMessage(statusClass) {
-    if (statusClass === 'status-critical') return 'CRITICAL VITALS DETECTED';
-    if (statusClass === 'status-warning') return 'VITALS OUTSIDE OPTIMAL RANGE';
-    return 'VITALS STABLE';
-}
+// Arrays for Chart
+const maxDataPoints = 30; // 30 seconds
+const timeLabels = Array(maxDataPoints).fill('');
+const bpmData = Array(maxDataPoints).fill(null);
 
-// Ensure unique log messages unless state changes
-let currentStatus = null;
-
-function addLogEntry(message, type) {
-    const timeStr = formatTimestamp(new Date());
-    const logHTML = `
-        <div class="log-entry ${type}">
-          <div class="log-time">[${timeStr}]</div>
-          <div class="log-msg">${message}</div>
-        </div>
-    `;
-    eventLog.insertAdjacentHTML('afterbegin', logHTML);
-
-    // Keep log max 10 entries avoiding memory bloat
-    if (eventLog.children.length > 8) {
-        eventLog.removeChild(eventLog.lastChild);
-    }
-}
-
-function formatTimestamp(date) {
-    const hh = String(date.getHours()).padStart(2, '0');
-    const mm = String(date.getMinutes()).padStart(2, '0');
-    const ss = String(date.getSeconds()).padStart(2, '0');
-    const ms = String(date.getMilliseconds()).padStart(3, '0');
-    return `${hh}:${mm}:${ss}:${ms}`;
-}
-
-function updateUI(data) {
-    // Hide error banner when data is received
-    errorBanner.classList.remove('active');
-
-    const bpm = Number(data.bpm);
-    const temp = Number(data.temp);
-
-    const isBpmValid = Number.isFinite(bpm);
-    const isTempValid = Number.isFinite(temp);
-
-    bpmValue.textContent = isBpmValid ? bpm : '--';
-    tempValue.textContent = isTempValid ? temp.toFixed(1) : '--';
-
-    if (isBpmValid && isTempValid) {
-        const newStatusClass = getStatusClass(bpm, temp);
-        
-        bpmContainer.className = `metric-content ${newStatusClass}`;
-        tempContainer.className = `metric-content ${newStatusClass}`;
-
-        if (newStatusClass !== currentStatus) {
-            let logType = 'log-info';
-            if (newStatusClass === 'status-warning') logType = 'log-warning';
-            if (newStatusClass === 'status-critical') logType = 'log-critical';
-            
-            addLogEntry(getStatusMessage(newStatusClass), logType);
-            currentStatus = newStatusClass;
+// Initialize Chart.js
+const ctx = document.getElementById('bpmChart').getContext('2d');
+const bpmChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: timeLabels,
+        datasets: [
+            {
+                label: 'BPM',
+                data: bpmData,
+                borderColor: '#10b981',
+                borderWidth: 2,
+                pointRadius: 0,
+                tension: 0.4,
+                fill: false
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 0 },
+        plugins: {
+            legend: { display: false },
+            tooltip: { enabled: false }
+        },
+        scales: {
+            x: {
+                grid: { display: false },
+                ticks: { color: '#475569', font: { size: 10, family: 'Share Tech Mono' }, maxTicksLimit: 9 }
+            },
+            y: {
+                min: 10, max: 200,
+                grid: { color: 'rgba(255,255,255,0.03)' },
+                ticks: { 
+                    color: '#475569', 
+                    font: { size: 10, family: 'Share Tech Mono' }, 
+                    stepSize: 20, 
+                    callback: function(value, index, values) {
+                        return [10, 50, 75, 100, 125, 165, 200].includes(value) ? value : '';
+                    }
+                }
+            }
         }
-    } else {
-        bpmContainer.className = 'metric-content status-waiting';
-        tempContainer.className = 'metric-content status-waiting';
-    }
+    },
+    plugins: [{
+        id: 'horizontalLines',
+        beforeDraw: (chart) => {
+            const { ctx, chartArea: { left, right }, scales: { y } } = chart;
+            ctx.save();
+
+            // Red line at 100
+            const y100 = y.getPixelForValue(100);
+            ctx.strokeStyle = 'rgba(239, 68, 68, 0.8)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(left, y100);
+            ctx.lineTo(right, y100);
+            ctx.stroke();
+
+            // Blue line at 50
+            const y50 = y.getPixelForValue(50);
+            ctx.strokeStyle = 'rgba(59, 130, 246, 0.8)';
+            ctx.beginPath();
+            ctx.moveTo(left, y50);
+            ctx.lineTo(right, y50);
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+    }]
+});
+
+// Initialize Leaflet Map
+const map = L.map('leafletMap', {
+    center: [17.3850, 78.4867], // Hyderabad
+    zoom: 14,
+    zoomControl: true,
+    attributionControl: true
+});
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+const customIcon = L.divIcon({
+    className: 'custom-div-icon',
+    html: `<div style="width: 14px; height: 14px; background-color: #3b82f6; border-radius: 50%; box-shadow: 0 0 10px #3b82f6, inset 0 0 5px rgba(255,255,255,0.5); position: absolute; top: -7px; left: -7px;">
+           </div>`,
+});
+L.marker([17.3850, 78.4867], { icon: customIcon }).addTo(map);
+
+// Format current time HH:MM:SS
+function getTimeStr() {
+    const d = new Date();
+    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
 }
 
-// Clock Setup
-const clockTime = document.getElementById('clockTime');
-const clockDate = document.getElementById('clockDate');
-const initLog = document.getElementById('initLog');
+// Clock Update loop
+setInterval(() => {
+    const d = new Date();
+    navTime.textContent = getTimeStr();
+    navDate.textContent = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}, 1000);
 
-function updateClock() {
-    const now = new Date();
-    clockTime.textContent = String(now.getHours()).padStart(2, '0') + ':' + 
-                            String(now.getMinutes()).padStart(2, '0') + ':' + 
-                            String(now.getSeconds()).padStart(2, '0');
-    
-    clockDate.textContent = now.toLocaleDateString('en-US', { 
-        year: 'numeric', month: 'short', day: '2-digit' 
-    }).toUpperCase();
-}
+// Data UI Update Loop
+let lastInvalidMsg = "";
 
-setInterval(updateClock, 1000);
-updateClock();
-
-// Set Init Log time
-if (initLog) {
-  initLog.querySelector('.log-time').textContent = `[${formatTimestamp(new Date())}]`;
-}
-
-let errorLogged = false;
-
-// Poll every 1 second (from original logic)
 setInterval(() => {
     fetch(API_URL)
         .then(res => {
-            if (!res.ok) throw new Error('Network response was not ok');
+            if(!res.ok) throw new Error('Network Issue');
             return res.json();
         })
         .then(data => {
-            errorLogged = false;
-            updateUI(data);
-        })
-        .catch(err => {
-            if (!errorLogged) {
-                console.error('Error:', err);
-                errorBanner.classList.add('active');
-                addLogEntry('DATALINK DISRUPTED: UNABLE TO REACH UPLINK SERVER', 'log-critical');
-                
-                bpmContainer.className = 'metric-content status-waiting';
-                tempContainer.className = 'metric-content status-waiting';
-                bpmValue.textContent = '--';
-                tempValue.textContent = '--';
-                currentStatus = null;
-                errorLogged = true;
+            const bpm = Number(data.bpm);
+            const temp = Number(data.temp);
+
+            const isBpmValid = Number.isFinite(bpm);
+            const isTempValid = Number.isFinite(temp);
+
+            if (!isBpmValid || !isTempValid) {
+                const msg = `INVALID RATING: BPM=${data.bpm} | TEMP=${data.temp}`;
+                if (msg !== lastInvalidMsg) {
+                    logEvent(msg, 'log-error');
+                    lastInvalidMsg = msg;
+                }
+            } else {
+                lastInvalidMsg = "";
             }
-        });
+
+            // Set Text
+            bpmValue.textContent = isBpmValid ? bpm : '--';
+            tempValue.textContent = isTempValid ? temp.toFixed(1) : '--';
+
+            // Color Class Check BPM
+            bpmValue.className = 'bio-value';
+            let activeColor = '#10b981'; // green default for line
+            
+            if (isBpmValid) {
+                if (bpm > 100) {
+                    bpmValue.classList.add('red');
+                    activeColor = '#ef4444';
+                }
+                else if (bpm < 50) {
+                    bpmValue.classList.add('blue');
+                    activeColor = '#3b82f6';
+                }
+                else {
+                    bpmValue.classList.add('green');
+                }
+            } else {
+                bpmValue.style.color = '#475569';
+                activeColor = '#475569';
+            }
+
+            // Temp is always orange in the picture but let's do a basic color check
+            tempValue.className = 'bio-value orange';
+            if (!isTempValid) tempValue.style.color = '#475569';
+
+            // Chart update
+            timeLabels.push(getTimeStr());
+            timeLabels.shift();
+            bpmData.push(isBpmValid ? bpm : null);
+            bpmData.shift();
+
+            // Set line color dynamically if needed, though usually standard green in the mockup. Let's stick to green for the path.
+            bpmChart.data.datasets[0].borderColor = '#10b981'; 
+            bpmChart.update();
+
+            // Top Status Indication
+            if (isBpmValid) {
+                if (bpm > 100 || bpm < 50 || temp > 38 || temp < 35) {
+                    statusIndicator.innerHTML = `<span class="connected-dot" style="background:#ef4444; box-shadow: 0 0 8px #ef4444;"></span> CRITICAL`;
+                    statusIndicator.style.color = '#ef4444';
+                    statusIndicator.style.borderColor = 'rgba(239,68,68,0.3)';
+                    statusIndicator.style.background = 'rgba(239,68,68,0.05)';
+                } else {
+                    statusIndicator.innerHTML = `<span class="connected-dot"></span> NORMAL`;
+                    statusIndicator.style.color = '#10b981';
+                    statusIndicator.style.borderColor = 'rgba(16,185,129,0.3)';
+                    statusIndicator.style.background = 'rgba(16,185,129,0.05)';
+                }
+            }
+        })
+        .catch(err => console.error('Fetch error:', err));
+        
 }, 1000);
+
+// Init Clock once
+navTime.textContent = getTimeStr();
