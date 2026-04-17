@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Soldier Telemetry Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Include Phosphor Icons for tactical UI icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+  
+  <div class="error-banner" id="errorBanner">
+    ⚠ CONNECTION LOST — UNABLE TO REACH SERVER
+  </div>
+
+  <div class="container">
+    
+    <!-- HEADER -->
+    <header class="header-panel">
+      <div class="header-left">
+        <div class="bio-insignia">
+          <i class="ph-fill ph-dna"></i>
+        </div>
+        <div class="title-box">
+          <h1>SOLDIER TELEMETRY DASHBOARD</h1>
+          <div class="subtitle">SECURE UPLINK ESTABLISHED // ENCRYPTION LEVEL: TS-SCI</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="time-display">
+          <span id="clockTime">--:--:--</span>
+          <div class="status-dot"></div>
+        </div>
+        <div class="date-display" id="clockDate">-- --- ----</div>
+      </div>
+    </header>
+
+    <!-- VITALS GRID -->
+    <div class="vitals-grid">
+      
+      <!-- PROFILE -->
+      <div class="card">
+        <div class="card-title">OPERATIVE PROFILE</div>
+        <div class="profile-content">
+          <div class="profile-avatar">
+            <i class="ph ph-user"></i>
+          </div>
+          <div class="profile-details">
+            <div><span class="label">ID:</span><span class="value">G-1138</span></div>
+            <div><span class="label">NAME:</span><span class="value">HAYES, V.</span></div>
+            <div><span class="label">RANK:</span><span class="value">CPT</span></div>
+            <div><span class="label">TYPE:</span><span class="value">O-POS</span></div>
+            <div><span class="label">UNIT:</span><span class="value">STRIKE-7</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BPM -->
+      <div class="card">
+        <div class="card-title">HEART RATE MONITOR</div>
+        <div class="metric-content status-waiting" id="bpmContainer">
+          <div class="metric-value" id="bpmValue">--</div>
+          <div class="metric-unit">BPM</div>
+          <div class="metric-icon"><i class="ph-fill ph-heartbeat"></i></div>
+        </div>
+      </div>
+
+      <!-- TEMPERATURE -->
+      <div class="card">
+        <div class="card-title">CORE TEMPERATURE</div>
+        <div class="metric-content status-waiting" id="tempContainer">
+          <div class="metric-value" id="tempValue">--</div>
+          <div class="metric-unit">°C</div>
+          <div class="metric-icon"><i class="ph-fill ph-thermometer"></i></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ANALYTICS & MAP GRID -->
+    <div class="middle-grid">
+      <!-- GRAPH MOCK -->
+      <div class="card">
+        <div class="card-title">TELEMETRY HISTORY / BPM</div>
+        <div class="graph-area">
+          <div class="mock-line">
+            <svg preserveAspectRatio="none" viewBox="0 0 100 50">
+              <path d="M0,25 Q5,15 10,25 T20,25 T30,10 T40,25 T50,40 T60,25 T70,15 T80,25 T90,20 T100,25"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAP MOCK -->
+      <div class="card" title="Click to unfold tactical map">
+        <div class="card-title">TACTICAL POSITION</div>
+        <div class="map-area">
+          <!-- Mocking a top-down view grid/contour -->
+          <svg style="width:100%; height:100%; opacity:0.1; stroke:var(--neon-blue); fill:none; stroke-width:0.5;" viewBox="0 0 100 100">
+            <path d="M 10 0 C 20 20 50 40 100 50" />
+            <path d="M 0 30 C 40 40 60 70 80 100" />
+            <circle cx="50" cy="50" r="30" />
+            <circle cx="50" cy="50" r="60" />
+            <line x1="0" y1="50" x2="100" y2="50" />
+            <line x1="50" y1="0" x2="50" y2="100" />
+          </svg>
+          <div class="map-marker" style="top:45%; left:55%;"></div>
+          <div class="map-coords">LAT: 34.0522<br>LNG: -118.2437</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ERROR LOGS -->
+    <div class="card">
+      <div class="card-title">SYSTEM EVENT LOG</div>
+      <div class="event-log" id="eventLog">
+        <!-- Pre-filled realistic data -->
+        <div class="log-entry log-info" id="initLog">
+          <div class="log-time">[HH:MM:SS:MS]</div>
+          <div class="log-msg">SYSTEM INITIALIZATION COMPLETE. ESTABLISHING DATALINK...</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
