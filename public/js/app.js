@@ -111,6 +111,35 @@ const customIcon = L.divIcon({
 });
 L.marker([17.537296, 78.385142], { icon: customIcon }).addTo(map);
 
+// Highlight nearby hospitals using Overpass API
+const hospitalIcon = L.divIcon({
+    className: 'custom-div-icon',
+    html: `<div style="width: 16px; height: 16px; background-color: #ef4444; border-radius: 50%; display:flex; align-items:center; justify-content:center; box-shadow: 0 0 10px #ef4444; position: absolute; top: -8px; left: -8px;">
+             <span style="color:white; font-size:10px; font-weight:bold;">H</span>
+           </div>`,
+});
+
+// Radius of 10km around the location, querying nodes, ways, and relations
+const query = `[out:json];nwr["amenity"="hospital"](around:10000,17.537296,78.385142);out center;`;
+fetch('https://overpass-api.de/api/interpreter', {
+    method: 'POST',
+    body: `data=${encodeURIComponent(query)}`
+})
+.then(res => res.json())
+.then(data => {
+    if(data && data.elements) {
+        data.elements.forEach(element => {
+            const lat = element.lat || (element.center && element.center.lat);
+            const lon = element.lon || (element.center && element.center.lon);
+            if(lat && lon) {
+                L.marker([lat, lon], {icon: hospitalIcon}).addTo(map)
+                 .bindPopup(`<strong style="color:black;font-family:sans-serif;font-size:12px;">${(element.tags && element.tags.name) ? element.tags.name : 'Hospital'}</strong>`);
+            }
+        });
+    }
+})
+.catch(err => console.error('Overpass API error:', err));
+
 // Format current time HH:MM:SS
 function getTimeStr() {
     const d = new Date();
