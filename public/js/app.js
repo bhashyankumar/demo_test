@@ -111,35 +111,6 @@ const customIcon = L.divIcon({
 });
 L.marker([17.537296, 78.385142], { icon: customIcon }).addTo(map);
 
-// Highlight nearby hospitals using Overpass API
-const hospitalIcon = L.divIcon({
-    className: 'custom-div-icon',
-    html: `<div style="width: 16px; height: 16px; background-color: #ef4444; border-radius: 50%; display:flex; align-items:center; justify-content:center; box-shadow: 0 0 10px #ef4444; position: absolute; top: -8px; left: -8px;">
-             <span style="color:white; font-size:10px; font-weight:bold;">H</span>
-           </div>`,
-});
-
-// Radius of 10km around the location, querying nodes, ways, and relations
-const query = `[out:json];nwr["amenity"="hospital"](around:10000,17.537296,78.385142);out center;`;
-fetch('https://overpass-api.de/api/interpreter', {
-    method: 'POST',
-    body: `data=${encodeURIComponent(query)}`
-})
-.then(res => res.json())
-.then(data => {
-    if(data && data.elements) {
-        data.elements.forEach(element => {
-            const lat = element.lat || (element.center && element.center.lat);
-            const lon = element.lon || (element.center && element.center.lon);
-            if(lat && lon) {
-                L.marker([lat, lon], {icon: hospitalIcon}).addTo(map)
-                 .bindPopup(`<strong style="color:black;font-family:sans-serif;font-size:12px;">${(element.tags && element.tags.name) ? element.tags.name : 'Hospital'}</strong>`);
-            }
-        });
-    }
-})
-.catch(err => console.error('Overpass API error:', err));
-
 // Format current time HH:MM:SS
 function getTimeStr() {
     const d = new Date();
@@ -155,6 +126,37 @@ setInterval(() => {
 
 // Data UI Update Loop
 let lastInvalidMsg = "";
+let abnormalCounter = 0;
+let alertTriggered = false;
+let medicalTeamCounter = 0;
+
+const alertBanner     = document.getElementById('medicalAlertBanner');
+const alertTeamName   = document.getElementById('alertTeamName');
+const alertTimestamp  = document.getElementById('alertTimestamp');
+const alertProgressFill  = document.getElementById('alertProgressFill');
+const alertCounterBadge  = document.getElementById('alertCounterBadge');
+
+function triggerMedicalAlert() {
+    medicalTeamCounter++;
+    alertTeamName.textContent = `M${medicalTeamCounter}`;
+    alertTimestamp.textContent = getTimeStr();
+    alertBanner.style.display = 'flex';
+    logEvent(`[ALERT] MEDICAL TEAM M${medicalTeamCounter} ASSIGNED — 30s ABNORMAL CONDITION`, 'log-error');
+}
+
+function clearMedicalAlert() {
+    alertBanner.style.display = 'none';
+}
+
+function updateAlertProgress(count) {
+    const pct = Math.min((count / 30) * 100, 100);
+    alertProgressFill.style.width = pct + '%';
+    alertCounterBadge.textContent = `${count} / 30`;
+    // Badge colour transitions
+    alertCounterBadge.className = 'alert-counter-badge';
+    if (count >= 20) alertCounterBadge.classList.add('critical');
+    else if (count >= 10) alertCounterBadge.classList.add('warn');
+}
 
 setInterval(() => {
     fetch(API_URL)
@@ -177,6 +179,21 @@ setInterval(() => {
                 currentState = "ABNORMAL";
             }
 
+            // --- Consecutive Counter Logic ---
+            if (currentState === "ABNORMAL" || currentState === "INVALID") {
+                abnormalCounter++;
+                if (abnormalCounter >= 30 && !alertTriggered) {
+                    triggerMedicalAlert();
+                    alertTriggered = true;
+                }
+            } else {
+                abnormalCounter = 0;
+                alertTriggered = false;
+                clearMedicalAlert();
+            }
+            updateAlertProgress(abnormalCounter);
+
+            // --- System Log ---
             let logTxt = "";
             let logType = "";
             if (currentState === "INVALID") {

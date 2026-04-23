@@ -40,6 +40,16 @@
 
   <main class="dashboard">
 
+    <!-- MEDICAL ALERT BANNER -->
+    <div id="medicalAlertBanner" class="medical-alert-banner" style="display:none;">
+      <span class="alert-icon">⚠</span>
+      <div class="alert-text-group">
+        <span class="alert-title">CRITICAL: CONTINUOUS ABNORMAL CONDITION DETECTED</span>
+        <span class="alert-sub">ASSIGNED: <span id="alertTeamName">M1</span> &nbsp;|&nbsp; <span id="alertTimestamp"></span></span>
+      </div>
+      <button class="alert-close-btn" onclick="document.getElementById('medicalAlertBanner').style.display='none'">✕ DISMISS</button>
+    </div>
+
     <!-- TOP ROW -->
     <div class="grid-row top-row">
       <!-- FIELD OPERATIVE -->
@@ -84,6 +94,10 @@
       <div class="card panel-bpm">
         <div class="card-header">
           <span class="header-title">HEART RATE</span>
+          <span class="alert-counter-badge" id="alertCounterBadge">0 / 30</span>
+        </div>
+        <div class="alert-progress-bar">
+          <div id="alertProgressFill" class="alert-progress-fill"></div>
         </div>
         
         <div class="biometrics-grid">
