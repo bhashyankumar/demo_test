@@ -14,7 +14,7 @@ function logEvent(msg, typeClass = '') {
     div.className = `log-entry ${typeClass}`;
     div.innerHTML = `<span style="color:#64748b;">[${getTimeStr()}]</span> <span>${msg}</span>`;
     eventLog.prepend(div);
-    if (eventLog.children.length > 50) eventLog.lastChild.remove();
+    if (eventLog.children.length > 15) eventLog.lastChild.remove();
 }
 
 // Arrays for Chart
@@ -98,7 +98,7 @@ const bpmChart = new Chart(ctx, {
 
 // Initialize Leaflet Map
 const map = L.map('leafletMap', {
-    center: [17.3850, 78.4867], // Hyderabad
+    center: [17.537296, 78.385142], // Location
     zoom: 14,
     zoomControl: true,
     attributionControl: true
@@ -110,7 +110,7 @@ const customIcon = L.divIcon({
     html: `<div style="width: 14px; height: 14px; background-color: #3b82f6; border-radius: 50%; box-shadow: 0 0 10px #3b82f6, inset 0 0 5px rgba(255,255,255,0.5); position: absolute; top: -7px; left: -7px;">
            </div>`,
 });
-L.marker([17.3850, 78.4867], { icon: customIcon }).addTo(map);
+L.marker([17.537296, 78.385142], { icon: customIcon }).addTo(map);
 
 // Format current time HH:MM:SS
 function getTimeStr() {
@@ -141,8 +141,18 @@ setInterval(() => {
             const isBpmValid = Number.isFinite(bpm);
             const isTempValid = Number.isFinite(temp);
 
+            let isAbnormal = false;
+            let msg = "";
+
             if (!isBpmValid || !isTempValid) {
-                const msg = `INVALID RATING: BPM=${data.bpm} | TEMP=${data.temp}`;
+                msg = `INVALID SENSOR DATA: BPM=${data.bpm} | TEMP=${data.temp}`;
+                isAbnormal = true;
+            } else if (bpm > 100 || bpm < 50 || temp > 38 || temp < 35) {
+                msg = `ABNORMAL READING: BPM=${bpm} | TEMP=${temp}`;
+                isAbnormal = true;
+            }
+
+            if (isAbnormal) {
                 if (msg !== lastInvalidMsg) {
                     logEvent(msg, 'log-error');
                     lastInvalidMsg = msg;

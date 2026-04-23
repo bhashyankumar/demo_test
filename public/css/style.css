@@ -116,6 +116,10 @@ body {
   flex: 1;
   min-height: 320px;
 }
+.map-row {
+  flex: 1;
+  min-height: 400px;
+}
 
 /* CARDS */
 .card {
@@ -142,7 +146,7 @@ body {
 .panel-bpm { flex: 1; }
 .panel-temp { flex: 0 0 30%; }
 .panel-chart { flex: 1; }
-.panel-map { flex: 0 0 30%; padding-bottom: 20px; }
+.panel-map { flex: 1; padding-bottom: 20px; }
 
 /* CARD HEADERS */
 .card-header {
