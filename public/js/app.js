@@ -130,59 +130,81 @@ let abnormalCounter = 0;
 let alertTriggered = false;
 let medicalTeamCounter = 0;
 
-// --- Alarm Audio (Web Audio API) ---
+// --- Alarm Audio (Web Audio API) — Emergency Siren ---
 let alarmAudioCtx = null;
-let alarmOscillators = [];
-let alarmInterval = null;
+let alarmNodes = [];
+let alarmRafId = null;
 
 function playAlarm() {
-    stopAlarm(); // prevent doubles
+    stopAlarm();
     alarmAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = alarmAudioCtx;
+    const now = ctx.currentTime;
 
-    function beep(startTime) {
-        const osc1 = alarmAudioCtx.createOscillator();
-        const osc2 = alarmAudioCtx.createOscillator();
-        const gainNode = alarmAudioCtx.createGain();
+    // Master gain — full volume
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(1.0, now);
+    masterGain.connect(ctx.destination);
 
-        osc1.type = 'square';
-        osc1.frequency.setValueAtTime(880, startTime);       // A5
-        osc1.frequency.setValueAtTime(1100, startTime + 0.15); // C#6
+    // Compressor to keep it loud & punchy without clipping
+    const compressor = ctx.createDynamicsCompressor();
+    compressor.threshold.value = -6;
+    compressor.knee.value = 3;
+    compressor.ratio.value = 20;
+    compressor.attack.value = 0.001;
+    compressor.release.value = 0.05;
+    compressor.connect(masterGain);
 
-        osc2.type = 'sawtooth';
-        osc2.frequency.setValueAtTime(440, startTime);
-        osc2.frequency.setValueAtTime(550, startTime + 0.15);
+    // --- Layer 1: Wailing siren (LFO drives frequency of main oscillator) ---
+    function createSirenLayer(baseFreq, wailRange, wailRate, type, gainVal, startOffset) {
+        const osc = ctx.createOscillator();
+        const lfo = ctx.createOscillator();
+        const lfoGain = ctx.createGain();
+        const oscGain = ctx.createGain();
 
-        gainNode.gain.setValueAtTime(0.0, startTime);
-        gainNode.gain.linearRampToValueAtTime(0.9, startTime + 0.02);
-        gainNode.gain.setValueAtTime(0.9, startTime + 0.28);
-        gainNode.gain.linearRampToValueAtTime(0.0, startTime + 0.35);
+        lfo.type = 'sine';
+        lfo.frequency.value = wailRate;          // how fast it wails
+        lfoGain.gain.value = wailRange;          // how wide the sweep is
+        lfo.connect(lfoGain);
+        lfoGain.connect(osc.frequency);
 
-        osc1.connect(gainNode);
-        osc2.connect(gainNode);
-        gainNode.connect(alarmAudioCtx.destination);
+        osc.type = type;
+        osc.frequency.value = baseFreq;
+        oscGain.gain.setValueAtTime(0, now + startOffset);
+        oscGain.gain.linearRampToValueAtTime(gainVal, now + startOffset + 0.05);
 
-        osc1.start(startTime);
-        osc2.start(startTime);
-        osc1.stop(startTime + 0.4);
-        osc2.stop(startTime + 0.4);
-        alarmOscillators.push(osc1, osc2);
+        osc.connect(oscGain);
+        oscGain.connect(compressor);
+
+        lfo.start(now + startOffset);
+        osc.start(now + startOffset);
+        alarmNodes.push(osc, lfo, lfoGain, oscGain);
     }
 
-    // Fire 3 rapid beeps immediately, then repeat every 2s
-    function burstBeeps() {
-        const now = alarmAudioCtx.currentTime;
-        beep(now);
-        beep(now + 0.45);
-        beep(now + 0.9);
-    }
-    burstBeeps();
-    alarmInterval = setInterval(burstBeeps, 2000);
+    // Main screeching wail: 900Hz ± 600Hz, 2 wails/sec
+    createSirenLayer(900, 600, 2.0, 'sawtooth', 0.6, 0);
+    // Backing tone: 600Hz ± 200Hz, offset phase for richness
+    createSirenLayer(600, 200, 2.0, 'square',   0.35, 0.1);
+    // High harmonic bite: 1800Hz ± 400Hz
+    createSirenLayer(1800, 400, 2.0, 'sine',    0.25, 0);
+
+    // --- Layer 2: Rapid klaxon chop (amplitude modulation at 8Hz) ---
+    const chopLfo = ctx.createOscillator();
+    const chopGain = ctx.createGain();
+    chopLfo.type = 'square';
+    chopLfo.frequency.value = 8;      // 8 chops per second
+    chopGain.gain.value = 0.4;
+    chopLfo.connect(chopGain);
+    chopGain.connect(masterGain.gain); // modulate master volume
+    chopLfo.start(now);
+    alarmNodes.push(chopLfo, chopGain);
+
+    alarmNodes.push(masterGain, compressor);
 }
 
 function stopAlarm() {
-    if (alarmInterval) { clearInterval(alarmInterval); alarmInterval = null; }
-    alarmOscillators.forEach(o => { try { o.stop(); } catch(_) {} });
-    alarmOscillators = [];
+    alarmNodes.forEach(n => { try { n.stop && n.stop(); n.disconnect && n.disconnect(); } catch(_) {} });
+    alarmNodes = [];
     if (alarmAudioCtx) { alarmAudioCtx.close(); alarmAudioCtx = null; }
 }
 
