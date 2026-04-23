@@ -144,7 +144,7 @@ setInterval(() => {
 
             if (!isBpmValid || !isTempValid) {
                 currentState = "INVALID";
-            } else if (bpm > 120 || bpm < 60 || temp > 38 || temp < 35) {
+            } else if (bpm > 120 || bpm < 60 || temp > 50 || temp < 10) {
                 currentState = "ABNORMAL";
             }
 
