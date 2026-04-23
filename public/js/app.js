@@ -141,24 +141,24 @@ setInterval(() => {
             const isBpmValid = Number.isFinite(bpm);
             const isTempValid = Number.isFinite(temp);
 
-            let isAbnormal = false;
-            let msg = "";
+            let currentState = "NORMAL";
 
             if (!isBpmValid || !isTempValid) {
-                msg = `INVALID SENSOR DATA: BPM=${data.bpm} | TEMP=${data.temp}`;
-                isAbnormal = true;
+                currentState = "INVALID";
             } else if (bpm > 100 || bpm < 50 || temp > 38 || temp < 35) {
-                msg = `ABNORMAL READING: BPM=${bpm} | TEMP=${temp}`;
-                isAbnormal = true;
+                currentState = "ABNORMAL";
             }
 
-            if (isAbnormal) {
-                if (msg !== lastInvalidMsg) {
-                    logEvent(msg, 'log-error');
-                    lastInvalidMsg = msg;
+            if (currentState !== "NORMAL") {
+                if (currentState !== lastInvalidMsg) {
+                    const logTxt = currentState === "INVALID" 
+                        ? `INVALID SENSOR DATA: BPM=${data.bpm} | TEMP=${data.temp}` 
+                        : `ABNORMAL READING: BPM=${bpm} | TEMP=${temp}`;
+                    logEvent(logTxt, 'log-error');
+                    lastInvalidMsg = currentState;
                 }
             } else {
-                lastInvalidMsg = "";
+                lastInvalidMsg = "NORMAL";
             }
 
             // Set Text
