@@ -248,6 +248,23 @@ body {
   border: none;
 }
 
+/* Operative Alert Progress Block */
+.operative-alert-block {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(255,255,255,0.06);
+}
+
+.operative-alert-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: #475569;
+  letter-spacing: 1.5px;
+  margin-bottom: 6px;
+}
+
 /* BIOMETRICS */
 .biometrics-grid {
   display: flex;

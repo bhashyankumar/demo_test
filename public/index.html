@@ -88,16 +88,23 @@
             <span class="connected-dot"></span> CONNECTED
           </div>
         </div>
+
+        <!-- Alert Progress -->
+        <div class="operative-alert-block">
+          <div class="operative-alert-label">
+            <span>ALERT THRESHOLD</span>
+            <span id="alertCounterBadge" class="alert-counter-badge">0 / 30</span>
+          </div>
+          <div class="alert-progress-bar">
+            <div id="alertProgressFill" class="alert-progress-fill"></div>
+          </div>
+        </div>
       </div>
 
       <!-- HEART RATE -->
       <div class="card panel-bpm">
         <div class="card-header">
           <span class="header-title">HEART RATE</span>
-          <span class="alert-counter-badge" id="alertCounterBadge">0 / 30</span>
-        </div>
-        <div class="alert-progress-bar">
-          <div id="alertProgressFill" class="alert-progress-fill"></div>
         </div>
         
         <div class="biometrics-grid">
