@@ -201,18 +201,21 @@ setInterval(() => {
             bpmChart.update();
 
             // Top Status Indication
-            if (isBpmValid) {
-                if (bpm > 100 || bpm < 50 || temp > 38 || temp < 35) {
-                    statusIndicator.innerHTML = `<span class="connected-dot" style="background:#ef4444; box-shadow: 0 0 8px #ef4444;"></span> CRITICAL`;
-                    statusIndicator.style.color = '#ef4444';
-                    statusIndicator.style.borderColor = 'rgba(239,68,68,0.3)';
-                    statusIndicator.style.background = 'rgba(239,68,68,0.05)';
-                } else {
-                    statusIndicator.innerHTML = `<span class="connected-dot"></span> NORMAL`;
-                    statusIndicator.style.color = '#10b981';
-                    statusIndicator.style.borderColor = 'rgba(16,185,129,0.3)';
-                    statusIndicator.style.background = 'rgba(16,185,129,0.05)';
-                }
+            if (!isBpmValid || !isTempValid) {
+                statusIndicator.innerHTML = `<span class="connected-dot" style="background:#f59e0b; box-shadow: 0 0 8px #f59e0b;"></span> INVALID`;
+                statusIndicator.style.color = '#f59e0b';
+                statusIndicator.style.borderColor = 'rgba(245,158,11,0.3)';
+                statusIndicator.style.background = 'rgba(245,158,11,0.05)';
+            } else if (bpm > 100 || bpm < 50 || temp > 38 || temp < 35) {
+                statusIndicator.innerHTML = `<span class="connected-dot" style="background:#ef4444; box-shadow: 0 0 8px #ef4444;"></span> ABNORMAL`;
+                statusIndicator.style.color = '#ef4444';
+                statusIndicator.style.borderColor = 'rgba(239,68,68,0.3)';
+                statusIndicator.style.background = 'rgba(239,68,68,0.05)';
+            } else {
+                statusIndicator.innerHTML = `<span class="connected-dot"></span> NORMAL`;
+                statusIndicator.style.color = '#10b981';
+                statusIndicator.style.borderColor = 'rgba(16,185,129,0.3)';
+                statusIndicator.style.background = 'rgba(16,185,129,0.05)';
             }
         })
         .catch(err => console.error('Fetch error:', err));
