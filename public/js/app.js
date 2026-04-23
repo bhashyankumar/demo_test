@@ -149,17 +149,20 @@ setInterval(() => {
                 currentState = "ABNORMAL";
             }
 
-            if (currentState !== "NORMAL") {
-                if (currentState !== lastInvalidMsg) {
-                    const logTxt = currentState === "INVALID" 
-                        ? `INVALID SENSOR DATA: BPM=${data.bpm} | TEMP=${data.temp}` 
-                        : `ABNORMAL READING: BPM=${bpm} | TEMP=${temp}`;
-                    logEvent(logTxt, 'log-error');
-                    lastInvalidMsg = currentState;
-                }
+            let logTxt = "";
+            let logType = "";
+            if (currentState === "INVALID") {
+                logTxt = `INVALID SENSOR DATA: BPM=${data.bpm} | TEMP=${data.temp}`;
+                logType = "log-error";
+            } else if (currentState === "ABNORMAL") {
+                logTxt = `ABNORMAL READING: BPM=${bpm} | TEMP=${temp}`;
+                logType = "log-error";
             } else {
-                lastInvalidMsg = "NORMAL";
+                logTxt = `NORMAL READING: BPM=${bpm} | TEMP=${temp}`;
+                logType = "";
             }
+            
+            logEvent(logTxt, logType);
 
             // Set Text
             bpmValue.textContent = isBpmValid ? bpm : '--';
