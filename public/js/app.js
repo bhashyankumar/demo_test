@@ -130,6 +130,62 @@ let abnormalCounter = 0;
 let alertTriggered = false;
 let medicalTeamCounter = 0;
 
+// --- Alarm Audio (Web Audio API) ---
+let alarmAudioCtx = null;
+let alarmOscillators = [];
+let alarmInterval = null;
+
+function playAlarm() {
+    stopAlarm(); // prevent doubles
+    alarmAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function beep(startTime) {
+        const osc1 = alarmAudioCtx.createOscillator();
+        const osc2 = alarmAudioCtx.createOscillator();
+        const gainNode = alarmAudioCtx.createGain();
+
+        osc1.type = 'square';
+        osc1.frequency.setValueAtTime(880, startTime);       // A5
+        osc1.frequency.setValueAtTime(1100, startTime + 0.15); // C#6
+
+        osc2.type = 'sawtooth';
+        osc2.frequency.setValueAtTime(440, startTime);
+        osc2.frequency.setValueAtTime(550, startTime + 0.15);
+
+        gainNode.gain.setValueAtTime(0.0, startTime);
+        gainNode.gain.linearRampToValueAtTime(0.9, startTime + 0.02);
+        gainNode.gain.setValueAtTime(0.9, startTime + 0.28);
+        gainNode.gain.linearRampToValueAtTime(0.0, startTime + 0.35);
+
+        osc1.connect(gainNode);
+        osc2.connect(gainNode);
+        gainNode.connect(alarmAudioCtx.destination);
+
+        osc1.start(startTime);
+        osc2.start(startTime);
+        osc1.stop(startTime + 0.4);
+        osc2.stop(startTime + 0.4);
+        alarmOscillators.push(osc1, osc2);
+    }
+
+    // Fire 3 rapid beeps immediately, then repeat every 2s
+    function burstBeeps() {
+        const now = alarmAudioCtx.currentTime;
+        beep(now);
+        beep(now + 0.45);
+        beep(now + 0.9);
+    }
+    burstBeeps();
+    alarmInterval = setInterval(burstBeeps, 2000);
+}
+
+function stopAlarm() {
+    if (alarmInterval) { clearInterval(alarmInterval); alarmInterval = null; }
+    alarmOscillators.forEach(o => { try { o.stop(); } catch(_) {} });
+    alarmOscillators = [];
+    if (alarmAudioCtx) { alarmAudioCtx.close(); alarmAudioCtx = null; }
+}
+
 const alertBanner     = document.getElementById('medicalAlertBanner');
 const alertTeamName   = document.getElementById('alertTeamName');
 const alertTimestamp  = document.getElementById('alertTimestamp');
@@ -142,10 +198,12 @@ function triggerMedicalAlert() {
     alertTimestamp.textContent = getTimeStr();
     alertBanner.style.display = 'flex';
     logEvent(`[ALERT] MEDICAL TEAM M${medicalTeamCounter} ASSIGNED — 30s ABNORMAL CONDITION`, 'log-error');
+    playAlarm();
 }
 
 function clearMedicalAlert() {
     alertBanner.style.display = 'none';
+    stopAlarm();
 }
 
 function updateAlertProgress(count) {
