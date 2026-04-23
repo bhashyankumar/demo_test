@@ -201,18 +201,19 @@ body {
   margin-bottom: 30px;
 }
 .avatar-circle {
-  width: 80px;
+  width: 80px;            /* keep your existing size if different */
   height: 80px;
   border-radius: 50%;
-  border: 2px solid var(--color-green);
+  overflow: hidden;       /* ensures image stays inside circle */
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
-  color: var(--color-green);
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
-  background: rgba(16, 185, 129, 0.05);
-  text-shadow: 0 0 10px var(--color-green);
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;      /* fills circle nicely */
 }
 
 .details-list {
