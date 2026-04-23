@@ -5,7 +5,6 @@ const bpmValue = document.getElementById('bpmValue');
 const tempValue = document.getElementById('tempValue');
 const navTime = document.getElementById('navTime');
 const navDate = document.getElementById('navDate');
-const statusIndicator = document.querySelector('.status-indicator');
 const eventLog = document.getElementById('eventLog');
 
 function logEvent(msg, typeClass = '') {
@@ -73,22 +72,22 @@ const bpmChart = new Chart(ctx, {
             const { ctx, chartArea: { left, right }, scales: { y } } = chart;
             ctx.save();
 
-            // Red line at 100
-            const y100 = y.getPixelForValue(100);
+            // Red line at 120
+            const y120 = y.getPixelForValue(120);
             ctx.strokeStyle = 'rgba(239, 68, 68, 0.8)';
             ctx.lineWidth = 1;
             ctx.setLineDash([5, 5]);
             ctx.beginPath();
-            ctx.moveTo(left, y100);
-            ctx.lineTo(right, y100);
+            ctx.moveTo(left, y120);
+            ctx.lineTo(right, y120);
             ctx.stroke();
 
-            // Blue line at 50
-            const y50 = y.getPixelForValue(50);
+            // Blue line at 60
+            const y60 = y.getPixelForValue(60);
             ctx.strokeStyle = 'rgba(59, 130, 246, 0.8)';
             ctx.beginPath();
-            ctx.moveTo(left, y50);
-            ctx.lineTo(right, y50);
+            ctx.moveTo(left, y60);
+            ctx.lineTo(right, y60);
             ctx.stroke();
             
             ctx.restore();
@@ -145,7 +144,7 @@ setInterval(() => {
 
             if (!isBpmValid || !isTempValid) {
                 currentState = "INVALID";
-            } else if (bpm > 100 || bpm < 50 || temp > 38 || temp < 35) {
+            } else if (bpm > 120 || bpm < 60 || temp > 38 || temp < 35) {
                 currentState = "ABNORMAL";
             }
 
@@ -173,11 +172,11 @@ setInterval(() => {
             let activeColor = '#10b981'; // green default for line
             
             if (isBpmValid) {
-                if (bpm > 100) {
+                if (bpm > 120) {
                     bpmValue.classList.add('red');
                     activeColor = '#ef4444';
                 }
-                else if (bpm < 50) {
+                else if (bpm < 60) {
                     bpmValue.classList.add('blue');
                     activeColor = '#3b82f6';
                 }
@@ -202,24 +201,6 @@ setInterval(() => {
             // Set line color dynamically if needed, though usually standard green in the mockup. Let's stick to green for the path.
             bpmChart.data.datasets[0].borderColor = '#10b981'; 
             bpmChart.update();
-
-            // Top Status Indication
-            if (!isBpmValid || !isTempValid) {
-                statusIndicator.innerHTML = `<span class="connected-dot" style="background:#f59e0b; box-shadow: 0 0 8px #f59e0b;"></span> INVALID`;
-                statusIndicator.style.color = '#f59e0b';
-                statusIndicator.style.borderColor = 'rgba(245,158,11,0.3)';
-                statusIndicator.style.background = 'rgba(245,158,11,0.05)';
-            } else if (bpm > 100 || bpm < 50 || temp > 38 || temp < 35) {
-                statusIndicator.innerHTML = `<span class="connected-dot" style="background:#ef4444; box-shadow: 0 0 8px #ef4444;"></span> ABNORMAL`;
-                statusIndicator.style.color = '#ef4444';
-                statusIndicator.style.borderColor = 'rgba(239,68,68,0.3)';
-                statusIndicator.style.background = 'rgba(239,68,68,0.05)';
-            } else {
-                statusIndicator.innerHTML = `<span class="connected-dot"></span> NORMAL`;
-                statusIndicator.style.color = '#10b981';
-                statusIndicator.style.borderColor = 'rgba(16,185,129,0.3)';
-                statusIndicator.style.background = 'rgba(16,185,129,0.05)';
-            }
         })
         .catch(err => console.error('Fetch error:', err));
         
