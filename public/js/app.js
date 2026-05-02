@@ -6,6 +6,7 @@ const tempValue = document.getElementById('tempValue');
 const navTime = document.getElementById('navTime');
 const navDate = document.getElementById('navDate');
 const eventLog = document.getElementById('eventLog');
+const aiMessageText = document.getElementById('aiMessageText');
 
 function logEvent(msg, typeClass = '') {
     if (!eventLog) return;
@@ -293,6 +294,25 @@ setInterval(() => {
             bpmValue.textContent = isBpmValid ? bpm : '--';
             tempValue.textContent = isTempValid ? temp.toFixed(1) : '--';
 
+            if (data.aiMessage && aiMessageText) {
+                aiMessageText.textContent = data.aiMessage;
+                // Update color based on severity
+                const aiPanel = aiMessageText.parentElement.parentElement;
+                if (data.aiMessage.includes("CRITICAL")) {
+                    aiMessageText.style.color = "#ef4444";
+                    aiPanel.style.borderLeftColor = "#ef4444";
+                    aiPanel.style.background = "rgba(239, 68, 68, 0.05)";
+                } else if (data.aiMessage.includes("WARNING") || data.aiMessage.includes("ALERT")) {
+                    aiMessageText.style.color = "#f59e0b";
+                    aiPanel.style.borderLeftColor = "#f59e0b";
+                    aiPanel.style.background = "rgba(245, 158, 11, 0.05)";
+                } else {
+                    aiMessageText.style.color = "#10b981";
+                    aiPanel.style.borderLeftColor = "#10b981";
+                    aiPanel.style.background = "rgba(16, 185, 129, 0.05)";
+                }
+            }
+
             // Color Class Check BPM
             bpmValue.className = 'bio-value';
             let activeColor = '#10b981'; // green default for line
@@ -334,3 +354,42 @@ setInterval(() => {
 
 // Init Clock once
 navTime.textContent = getTimeStr();
+
+// --- AI Report Generation ---
+const generateReportBtn = document.getElementById('generateReportBtn');
+const reportOutputArea = document.getElementById('reportOutputArea');
+const reportText = document.getElementById('reportText');
+const reportTimeframe = document.getElementById('reportTimeframe');
+
+if (generateReportBtn) {
+    generateReportBtn.addEventListener('click', () => {
+        // Show loading state
+        generateReportBtn.disabled = true;
+        generateReportBtn.textContent = "GENERATING...";
+        generateReportBtn.style.background = "#475569";
+        
+        reportOutputArea.style.display = 'block';
+        reportText.innerHTML = '<span style="color: #94a3b8;">Analyzing historical data and consulting AI...</span>';
+
+        const hours = reportTimeframe ? reportTimeframe.value : 4;
+
+        fetch(`http://127.0.0.1:5000/generate-report?hours=${hours}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.report) {
+                    reportText.innerHTML = data.report.replace(/\n/g, '<br>');
+                } else {
+                    reportText.innerHTML = `<span style="color: #ef4444;">Error: ${data.error || 'Failed to generate report'}</span>`;
+                }
+            })
+            .catch(err => {
+                console.error('Report fetch error:', err);
+                reportText.innerHTML = `<span style="color: #ef4444;">Network error while generating report.</span>`;
+            })
+            .finally(() => {
+                generateReportBtn.disabled = false;
+                generateReportBtn.textContent = "GENERATE REPORT";
+                generateReportBtn.style.background = "#10b981";
+            });
+    });
+}
