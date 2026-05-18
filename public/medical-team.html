@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medical Team Dashboard - Classified</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/medical.css">
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <header class="top-nav">
+    <div class="nav-left">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+        </svg>
+      </div>
+      <div class="branding">
+        <h1 style="color: #ef4444;">MEDICAL DISPATCH OPERATIONS</h1>
+        <div class="subtitle">TACTICAL EMERGENCY RESPONSE - CLASSIFIED</div>
+      </div>
+    </div>
+    
+    <div class="nav-right">
+      <div class="clock" id="navTime">--:--:--</div>
+      <div class="date-status">
+        <span id="navDate">-- --- ----</span>
+        <span class="status-dot" style="background: #ef4444; box-shadow: 0 0 10px #ef4444;"></span>
+      </div>
+    </div>
+  </header>
+
+  <main class="dashboard">
+
+    <!-- TOP ROW -->
+    <div class="grid-row top-row" style="grid-template-columns: 1fr 1fr 1fr;">
+      
+      <!-- FIELD OPERATIVE (Reused Layout) -->
+      <div class="card panel-operative">
+        <div class="card-header">
+          <span class="header-title">INJURED OPERATIVE</span>
+          <span class="header-badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444;">Critical</span>
+        </div>
+        
+        <div class="avatar-section">
+          <div class="avatar-circle" style="border-color: #ef4444;">
+            <img src="JS.png" alt="Soldier Avatar" class="avatar-img">
+          </div>
+        </div>
+        
+        <div class="details-list">
+          <div class="detail-row">
+            <span class="detail-label">SOLDIER ID</span>
+            <span class="detail-value text-white" id="soldierId">D-7</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">NAME</span>
+            <span class="detail-value text-white" id="soldierName">Jaskirat Singh Rangi</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">UNIT</span>
+            <span class="detail-value text-white" id="soldierUnit">Research and Analysis Wing</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">STATUS</span>
+            <span class="detail-value text-white" id="soldierStatus">Active Duty</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">LOCATION</span>
+            <span class="detail-value text-white" id="soldierLocation">Sector 7-G</span>
+          </div>
+          <div class="detail-row connection-row">
+            <span class="connected-dot"></span> CONNECTED
+          </div>
+        </div>
+      </div>
+
+      <!-- MEDICAL STATUS CARD -->
+      <div class="card medical-status-card">
+        <div class="status-header">
+          <h2>MEDICAL STATUS</h2>
+          <span class="status-indicator">ACTIVE INCIDENT</span>
+        </div>
+        <div class="status-details">
+          <div class="detail-item">
+            <span class="detail-label">INCIDENT ID</span>
+            <span class="detail-value" id="incidentId">--</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">TEAM ASSIGNED</span>
+            <span class="detail-value" id="teamAssigned" style="color: #3b82f6;">--</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">DISPATCH TIME</span>
+            <span class="detail-value" id="dispatchTime">--</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">MEDIC CONTACT</span>
+            <span class="detail-value" id="medicContact">--</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MEDICAL ACTION PANEL -->
+      <div class="card medical-action-panel">
+        <h2>DISPATCH CONTROL</h2>
+        <div class="eta-container">
+          <span class="eta-label">ESTIMATED TIME OF ARRIVAL</span>
+          <div class="eta-time" id="etaDisplay">--:--</div>
+        </div>
+        <div class="action-buttons">
+          <button class="action-btn btn-primary" id="btnAcknowledge">ACKNOWLEDGE ASSIGNMENT</button>
+          <button class="action-btn btn-secondary" id="btnUpdate">REQUEST STATUS UPDATE</button>
+          <button class="action-btn btn-danger" id="btnCancel">CANCEL DISPATCH</button>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- JS Scripts -->
+  <script src="js/medicalTeams.js"></script>
+  <script src="js/medical.js"></script>
+</body>
+</html>
