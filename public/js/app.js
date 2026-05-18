@@ -288,7 +288,7 @@ setInterval(() => {
                 alertTriggered = false;
                 clearMedicalAlert();
             }
-            updateAlertProgress(Math.min(abnormalCounter, 30));
+            updateAlertProgress(abnormalCounter);
 
             // --- System Log ---
             let logTxt = "";
