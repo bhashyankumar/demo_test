@@ -105,12 +105,13 @@ const map = L.map('leafletMap', {
 });
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-const customIcon = L.divIcon({
-    className: 'custom-div-icon',
-    html: `<div style="width: 14px; height: 14px; background-color: #3b82f6; border-radius: 50%; box-shadow: 0 0 10px #3b82f6, inset 0 0 5px rgba(255,255,255,0.5); position: absolute; top: -7px; left: -7px;">
-           </div>`,
-});
-L.marker([17.537296, 78.385142], { icon: customIcon }).addTo(map);
+function createMapIcon(color) {
+    return L.divIcon({
+        className: 'custom-div-icon',
+        html: `<div style="width: 14px; height: 14px; background-color: ${color}; border-radius: 50%; box-shadow: 0 0 10px ${color}, inset 0 0 5px rgba(255,255,255,0.5); position: absolute; top: -7px; left: -7px;"></div>`,
+    });
+}
+let mapMarker = L.marker([17.537296, 78.385142], { icon: createMapIcon('#3b82f6') }).addTo(map);
 
 // Format current time HH:MM:SS
 function getTimeStr() {
@@ -220,12 +221,14 @@ function triggerMedicalAlert() {
     alertTeamName.textContent = `M${medicalTeamCounter}`;
     alertTimestamp.textContent = getTimeStr();
     alertBanner.style.display = 'flex';
+    mapMarker.setIcon(createMapIcon('#ef4444')); // Red
     logEvent(`[ALERT] MEDICAL TEAM M${medicalTeamCounter} ASSIGNED — 30s ABNORMAL CONDITION`, 'log-error');
     playAlarm();
 }
 
 function clearMedicalAlert() {
     alertBanner.style.display = 'none';
+    mapMarker.setIcon(createMapIcon('#3b82f6')); // Blue
     stopAlarm();
 }
 
@@ -262,17 +265,30 @@ setInterval(() => {
 
             // --- Consecutive Counter Logic ---
             if (currentState === "ABNORMAL" || currentState === "INVALID") {
-                abnormalCounter++;
+                let now = Date.now();
+                let startTime = parseInt(localStorage.getItem('abnormalStartTime'));
+                let lastUpdate = parseInt(localStorage.getItem('abnormalLastUpdate'));
+
+                if (isNaN(startTime) || isNaN(lastUpdate) || (now - lastUpdate > 3000)) {
+                    startTime = now;
+                    localStorage.setItem('abnormalStartTime', startTime);
+                }
+
+                localStorage.setItem('abnormalLastUpdate', now);
+                abnormalCounter = Math.floor((now - startTime) / 1000);
+
                 if (abnormalCounter >= 30 && !alertTriggered) {
                     triggerMedicalAlert();
                     alertTriggered = true;
                 }
             } else {
+                localStorage.removeItem('abnormalStartTime');
+                localStorage.removeItem('abnormalLastUpdate');
                 abnormalCounter = 0;
                 alertTriggered = false;
                 clearMedicalAlert();
             }
-            updateAlertProgress(abnormalCounter);
+            updateAlertProgress(Math.min(abnormalCounter, 30));
 
             // --- System Log ---
             let logTxt = "";

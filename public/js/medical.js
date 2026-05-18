@@ -170,12 +170,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (currentState === "ABNORMAL" || currentState === "INVALID") {
-            abnormalCounter++;
+            let now = Date.now();
+            let startTime = parseInt(localStorage.getItem('abnormalStartTime'));
+            let lastUpdate = parseInt(localStorage.getItem('abnormalLastUpdate'));
+
+            if (isNaN(startTime) || isNaN(lastUpdate) || (now - lastUpdate > 3000)) {
+                startTime = now;
+                localStorage.setItem('abnormalStartTime', startTime);
+            }
+
+            localStorage.setItem('abnormalLastUpdate', now);
+            abnormalCounter = Math.floor((now - startTime) / 1000);
+
             if (abnormalCounter >= 30 && !alertTriggered) {
                 triggerEmergencyMode();
                 alertTriggered = true;
             }
         } else {
+            localStorage.removeItem('abnormalStartTime');
+            localStorage.removeItem('abnormalLastUpdate');
             abnormalCounter = 0;
             if (alertTriggered) {
               setStandbyMode();
