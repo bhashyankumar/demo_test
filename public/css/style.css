@@ -32,9 +32,10 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 30px;
+  padding: 15px 20px;
   background-color: #070c14;
   border-bottom: 1px solid var(--card-border);
+  width: 100%;
 }
 
 .nav-left {
@@ -97,15 +98,17 @@ body {
 /* DASHBOARD LAYOUT */
 .dashboard {
   flex: 1;
-  padding: 20px 30px;
+  padding: 20px 0;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  width: 100%;
 }
 
 .grid-row {
   display: flex;
   gap: 20px;
+  padding: 0 20px;
 }
 
 .top-row {
@@ -118,7 +121,7 @@ body {
 }
 .map-row {
   flex: 1;
-  min-height: 85vh;
+  min-height: 400px;
 }
 
 /* CARDS */

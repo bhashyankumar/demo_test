@@ -14,12 +14,20 @@ document.addEventListener('DOMContentLoaded', () => {
   // UI Elements
   const statusIndicator = document.querySelector('.status-indicator');
   const incidentIdEl = document.getElementById('incidentId');
+  const statusSoldierIdEl = document.getElementById('statusSoldierId');
   const teamAssignedEl = document.getElementById('teamAssigned');
   const dispatchTimeEl = document.getElementById('dispatchTime');
   const medicContactEl = document.getElementById('medicContact');
   const etaDisplay = document.getElementById('etaDisplay');
-  const cardHeaderBadge = document.querySelector('.panel-operative .header-badge');
-  const avatarCircle = document.querySelector('.avatar-circle');
+  const statusBadge = document.getElementById('statusBadge');
+  const statusAvatarCircle = document.getElementById('statusAvatarCircle');
+  const soldierDetailsCard = document.getElementById('soldierDetailsCard');
+  const soldierMapRow = document.getElementById('soldierMapRow');
+  const topRowGrid = document.getElementById('topRowGrid');
+
+  // Leaflet Map Variables
+  let medicalMap = null;
+  let medicalMapMarker = null;
 
   // State
   let abnormalCounter = 0;
@@ -27,6 +35,49 @@ document.addEventListener('DOMContentLoaded', () => {
   let medicalTeamCounter = 0;
   let etaSeconds = 0;
   let etaInterval = null;
+
+  // Initialize Leaflet Map
+  function initializeLeafletMap() {
+    if (medicalMap) return; // Already initialized
+    
+    medicalMap = L.map('leafletMapMedical', {
+      center: [17.537296, 78.385142],
+      zoom: 14,
+      zoomControl: true,
+      attributionControl: true
+    });
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(medicalMap);
+    
+    const customIcon = L.divIcon({
+      className: 'custom-div-icon',
+      html: `<div style="width: 14px; height: 14px; background-color: #ef4444; border-radius: 50%; box-shadow: 0 0 10px #ef4444, inset 0 0 5px rgba(255,255,255,0.5); position: absolute; top: -7px; left: -7px;"></div>`,
+    });
+    
+    medicalMapMarker = L.marker([17.537296, 78.385142], { icon: customIcon }).addTo(medicalMap);
+  }
+
+  // Show Soldier Details and Map
+  function showSoldierDetailsAndMap() {
+    soldierDetailsCard.style.display = 'flex';
+    soldierMapRow.style.display = 'flex';
+    topRowGrid.style.gridTemplateColumns = '1.5fr 1fr 1fr';
+    
+    // Initialize map if not already done
+    if (!medicalMap) {
+      setTimeout(() => {
+        initializeLeafletMap();
+        if (medicalMap) medicalMap.invalidateSize();
+      }, 100);
+    }
+  }
+
+  // Hide Soldier Details and Map
+  function hideSoldierDetailsAndMap() {
+    soldierDetailsCard.style.display = 'none';
+    soldierMapRow.style.display = 'none';
+    topRowGrid.style.gridTemplateColumns = '1.5fr 1fr';
+  }
 
   function setStandbyMode() {
     statusIndicator.innerText = "STANDBY - NO EMERGENCY";
@@ -36,17 +87,20 @@ document.addEventListener('DOMContentLoaded', () => {
     statusIndicator.style.borderColor = "#94a3b8";
 
     incidentIdEl.innerText = "--";
+    statusSoldierIdEl.innerText = "--";
     teamAssignedEl.innerText = "--";
     dispatchTimeEl.innerText = "--";
     medicContactEl.innerText = "--";
     etaDisplay.innerText = "--:--";
     etaDisplay.style.color = "#94a3b8";
 
-    cardHeaderBadge.innerText = "Normal";
-    cardHeaderBadge.style.background = "rgba(16, 185, 129, 0.2)";
-    cardHeaderBadge.style.color = "#10b981";
-    cardHeaderBadge.style.borderColor = "#10b981";
-    avatarCircle.style.borderColor = "#10b981";
+    statusBadge.innerText = "Normal";
+    statusBadge.style.background = "rgba(16, 185, 129, 0.2)";
+    statusBadge.style.color = "#10b981";
+    statusBadge.style.borderColor = "#10b981";
+    statusAvatarCircle.style.borderColor = "#10b981";
+
+    hideSoldierDetailsAndMap();
 
     if (etaInterval) clearInterval(etaInterval);
   }
@@ -63,15 +117,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const d = new Date();
     const assignmentData = window.activeAssignments ? window.activeAssignments[0] : {};
     incidentIdEl.innerText = `INC-${d.getFullYear()}${(d.getMonth()+1).toString().padStart(2,'0')}${d.getDate().toString().padStart(2,'0')}-M${medicalTeamCounter}`;
+    statusSoldierIdEl.innerText = assignmentData.soldierId || "--";
     teamAssignedEl.innerText = `M${medicalTeamCounter}`;
     dispatchTimeEl.innerText = d.toLocaleTimeString();
     medicContactEl.innerText = assignmentData.medicContact || "Dr. Sarah Jenkins";
     
-    cardHeaderBadge.innerText = "Critical";
-    cardHeaderBadge.style.background = "rgba(239, 68, 68, 0.2)";
-    cardHeaderBadge.style.color = "#ef4444";
-    cardHeaderBadge.style.borderColor = "#ef4444";
-    avatarCircle.style.borderColor = "#ef4444";
+    statusBadge.innerText = "Critical";
+    statusBadge.style.background = "rgba(239, 68, 68, 0.2)";
+    statusBadge.style.color = "#ef4444";
+    statusBadge.style.borderColor = "#ef4444";
+    statusAvatarCircle.style.borderColor = "#ef4444";
+
+    showSoldierDetailsAndMap();
 
     // Start 5 min ETA
     etaSeconds = 5 * 60;

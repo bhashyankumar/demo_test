@@ -10,6 +10,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/medical.css">
 </head>
@@ -41,17 +44,47 @@
   <main class="dashboard">
 
     <!-- TOP ROW -->
-    <div class="grid-row top-row" style="grid-template-columns: 1fr 1fr 1fr;">
+    <div class="grid-row top-row" id="topRowGrid" style="grid-template-columns: 1.5fr 1fr;">
       
-      <!-- FIELD OPERATIVE (Reused Layout) -->
-      <div class="card panel-operative">
+      <!-- MEDICAL STATUS CARD -->
+      <div class="card medical-status-card">
+        <div class="status-header">
+          <h2>MEDICAL STATUS</h2>
+          <span class="status-indicator">ACTIVE INCIDENT</span>
+        </div>
+        <div class="status-details">
+          <div class="detail-item">
+            <span class="detail-label">INCIDENT ID</span>
+            <span class="detail-value" id="incidentId">--</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">SOLDIER ID</span>
+            <span class="detail-value" id="statusSoldierId">--</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">TEAM ASSIGNED</span>
+            <span class="detail-value" id="teamAssigned" style="color: #3b82f6;">--</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">DISPATCH TIME</span>
+            <span class="detail-value" id="dispatchTime">--</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">MEDIC CONTACT</span>
+            <span class="detail-value" id="medicContact">--</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ASSIGNED SOLDIER DETAILS AND LOCATION CARD (Hidden by default) -->
+      <div class="card panel-operative" id="soldierDetailsCard" style="display: none;">
         <div class="card-header">
-          <span class="header-title">INJURED OPERATIVE</span>
-          <span class="header-badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444;">Critical</span>
+          <span class="header-title">ASSIGNED SOLDIER DETAILS</span>
+          <span class="header-badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444;" id="statusBadge">Critical</span>
         </div>
         
         <div class="avatar-section">
-          <div class="avatar-circle" style="border-color: #ef4444;">
+          <div class="avatar-circle" style="border-color: #ef4444;" id="statusAvatarCircle">
             <img src="JS.png" alt="Soldier Avatar" class="avatar-img">
           </div>
         </div>
@@ -83,33 +116,7 @@
         </div>
       </div>
 
-      <!-- MEDICAL STATUS CARD -->
-      <div class="card medical-status-card">
-        <div class="status-header">
-          <h2>MEDICAL STATUS</h2>
-          <span class="status-indicator">ACTIVE INCIDENT</span>
-        </div>
-        <div class="status-details">
-          <div class="detail-item">
-            <span class="detail-label">INCIDENT ID</span>
-            <span class="detail-value" id="incidentId">--</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">TEAM ASSIGNED</span>
-            <span class="detail-value" id="teamAssigned" style="color: #3b82f6;">--</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">DISPATCH TIME</span>
-            <span class="detail-value" id="dispatchTime">--</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">MEDIC CONTACT</span>
-            <span class="detail-value" id="medicContact">--</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- MEDICAL ACTION PANEL -->
+      <!-- MEDICAL ACTION PANEL / DISPATCH CONTROL -->
       <div class="card medical-action-panel">
         <h2>DISPATCH CONTROL</h2>
         <div class="eta-container">
@@ -125,8 +132,22 @@
 
     </div>
 
+    <!-- SOLDIER LOCATION MAP (Hidden by default, shows only during critical) -->
+    <div class="grid-row map-row" id="soldierMapRow" style="display: none;">
+      <div class="card panel-map">
+        <div class="card-header">
+          <span class="header-title">SOLDIER LIVE LOCATION</span>
+          <span class="header-coord">17.537296, 78.385142</span>
+        </div>
+        <div id="leafletMapMedical" class="map-container"></div>
+      </div>
+    </div>
+
   </main>
 
+  <!-- JS Libraries -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  
   <!-- JS Scripts -->
   <script src="js/medicalTeams.js"></script>
   <script src="js/medical.js"></script>
